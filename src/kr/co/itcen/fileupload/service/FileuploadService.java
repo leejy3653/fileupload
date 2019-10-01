@@ -1,12 +1,19 @@
 package kr.co.itcen.fileupload.service;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Calendar;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import kr.co.itcen.fileupload.exception.FileuploadException;
+
 @Service
 public class FileuploadService {
+	private static final String SAVE_PATH = "/uploads"; // D 드라이브에 uploads 폴더를 생성해준다.
+	private static final String URL_PREFIX = "/images";
 
 	public String retore(MultipartFile multipartFile) {
 		String url = "";
@@ -15,15 +22,29 @@ public class FileuploadService {
 			return url;
 		}
 
-		String originalFilename = multipartFile.getOriginalFilename();
+		try {
 
-		String saveFileName = generateSaveFilename(originalFilename.substring(originalFilename.lastIndexOf(".") + 1));
+			String originalFilename = multipartFile.getOriginalFilename();
 
-		long fileSize = multipartFile.getSize();
+			String saveFileName = generateSaveFilename(
+					originalFilename.substring(originalFilename.lastIndexOf(".") + 1));
 
-		System.out.println("##################################" + originalFilename);
-		System.out.println("##################################" + saveFileName);
-		System.out.println("##################################" + fileSize);
+			long fileSize = multipartFile.getSize();
+
+			System.out.println("##################################" + originalFilename);
+			System.out.println("##################################" + saveFileName);
+			System.out.println("##################################" + fileSize);
+
+			byte[] fileData = multipartFile.getBytes();
+			OutputStream os = new FileOutputStream(SAVE_PATH + "/" + saveFileName);
+			os.write(fileData);
+			os.close();
+			url = URL_PREFIX + "/" + saveFileName;
+
+		} catch (IOException e) {
+			throw new FileuploadException();
+		}
+
 		return url;
 	}
 
